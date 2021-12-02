@@ -2,13 +2,36 @@ const express = require("express");
 const path = require("path");
 const connectDB = require("./db/connect");
 const user = require("./model/user");
+const bodyparser = require("body-parser");
 const bcrypt = require("bcryptjs");
-
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const app = express();
-app.use(express.json());
 
 app.use("/", express.static(path.join(__dirname, "static")));
+app.use(bodyparser.json());
+
+app.post("/api/login", async (req, res) => {
+  const { username, password } = req.body;
+  const User = await user.findOne({ username }).lean();
+
+  if (!User) {
+    return res.json({ status: "error", error: "Invalid username/password" });
+  }
+  if (await bcrypt.compare(password, User.password)) {
+    const token = jwt.sign(
+      { id: User._id, username: User.username },
+      process.env.JWT_SECRET
+    );
+    return res.json({ status: "ok", data: token });
+  }
+  res.json({
+    status: "error",
+    error: "Invalid username/password",
+    name: username,
+  });
+});
+
 app.post("/api/register", async (req, res) => {
   const { name, username, password: plainTextPassword, contact } = req.body;
   if (!username || typeof username !== "string") {
@@ -23,9 +46,7 @@ app.post("/api/register", async (req, res) => {
   if (!contact || typeof contact !== "string") {
     return res.json({ status: "error", error: "Invalid contact" });
   }
-
   const password = await bcrypt.hash(plainTextPassword, 10);
-
   try {
     const response = await user.create({
       name,
@@ -40,8 +61,7 @@ app.post("/api/register", async (req, res) => {
     }
     throw error;
   }
-
-  res.json({ status: "ok" });
+  res.json({ status: "ok", name: username });
 });
 
 const start = async () => {
