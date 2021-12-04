@@ -1,15 +1,13 @@
-const form = document.getElementById("reg-form");
-const btn = document.getElementById("login-btn");
+const form = document.getElementById("login");
+const btn = document.getElementById("reg-btn");
 btn.addEventListener("click", () => {
-  window.location = "./login.html";
+  window.location = "./index.html";
 });
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
-  const name = document.getElementById("name").value;
-  const contact = document.getElementById("contact").value;
-  const result = await fetch("/api/register", {
+  const result = await fetch("/api/login", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -17,15 +15,16 @@ form.addEventListener("submit", async (event) => {
     body: JSON.stringify({
       username,
       password,
-      name,
-      contact,
     }),
   }).then((res) => {
     return res.json();
   });
+  console.log(result);
   if (result.status === "ok") {
+    console.log("Got The token", result.data);
+    localStorage.setItem("JWT Token", result.data);
     alert("Success");
-    window.location = "./login.html";
+    window.location = "./dashboard.html";
   } else {
     alert(result.error);
   }
