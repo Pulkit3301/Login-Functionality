@@ -19,4 +19,9 @@ form.addEventListener("submit", async (event) => {
   }).then((res) => {
     res.json();
   });
+  if (result.status === "ok") {
+    alert("Success");
+  } else {
+    alert(resul.error);
+  }
 });
